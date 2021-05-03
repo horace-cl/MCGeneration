@@ -3,24 +3,48 @@
 # Name of the fragment to be used.
 #
 # If number of arguments passed ($#) is equal to zero (-eq 0) 
-if [[ $# -eq 0 ]] ; then
-	  job=0
-    fragment="PHSP_Photos"
-    START=0
-elif [[ $# -eq 1 ]] ; then
-    job=$1
-		fragment="PHSP_Photos"
-    START=0
-elif [[ $# -eq 2 ]] ; then
-    job=$1
-	  fragment=$2
-    START=0
-elif [[ $# -eq 3 ]]; then
-    job=$1
-		fragment=$2
-		START=$3
-fi
-events=50
+#if [[ $# -eq 0 ]] ; then
+#	  job=0
+#    fragment="PHSP_Photos"
+#    START=0
+#elif [[ $# -eq 1 ]] ; then
+#    job=$1
+#		fragment="PHSP_Photos"
+#   START=0
+#elif [[ $# -eq 2 ]] ; then
+#    job=$1
+#	  fragment=$2
+#    START=0
+#elif [[ $# -eq 3 ]]; then
+#    job=$1
+#		fragment=$2
+#		START=$3
+#fi
+
+fragment="PHSP_Photos"
+START=0
+
+for ARGUMENT in "$@"
+do
+
+    KEY=$(echo $ARGUMENT | cut -f1 -d=)
+    VALUE=$(echo $ARGUMENT | cut -f2 -d=)   
+
+    case "$KEY" in
+            fragment)           fragment=${VALUE} ;;
+            START)              START=${VALUE} ;;     
+            *)   
+    esac    
+
+
+done
+
+echo "fragment = $fragment"
+echo "START = $START"
+
+
+
+
 
 SCRAM="slc7_amd64_gcc700"
 #RELEASE FOR EVERY STEP
@@ -31,12 +55,17 @@ RECO_REL="CMSSW_10_2_13_patch1"
 MINI_REL="CMSSW_10_2_14"
 NANO_REL="CMSSW_10_2_22"
 
-
-echo "\n\n================ STARTING ====================="
-pwd
-ls
-echo "n================ STARTING =====================\n\n"
-
+echo " "
+echo " "
+echo "================ STARTING ====================="
+directory=$(dirname -- $(readlink -fn -- "$0"))
+echo $directory
+a=`ls -la`
+IFS='$'
+echo -e ${a[0]}
+echo "================ STARTING ====================="
+echo " "
+echo " "
 
 
 
