@@ -4,14 +4,21 @@
 #
 # If number of arguments passed ($#) is equal to zero (-eq 0) 
 if [[ $# -eq 0 ]] ; then
+	  job=0
     fragment="PHSP_Photos"
     START=0
 elif [[ $# -eq 1 ]] ; then
-    fragment=$1
+    job=$1
+		fragment="PHSP_Photos"
     START=0
-else
-    fragment=$1
-    START=$2
+elif [[ $# -eq 2 ]] ; then
+    job=$1
+	  fragment=$2
+    START=0
+elif [[ $# -eq 3 ]]; then
+    job=$1
+		fragment=$2
+		START=$3
 fi
 events=50
 
