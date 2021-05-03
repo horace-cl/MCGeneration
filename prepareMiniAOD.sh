@@ -3,12 +3,32 @@
 # Name of the fragment to be used.
 #
 # If number of arguments passed ($#) is equal to zero (-eq 0) 
-if [[ $# -eq 0 ]] ; then
-    fragment="PHSP_Photos"
-else
-    fragment=$1
-fi
+#if [[ $# -eq 0 ]] ; then
+#    fragment="PHSP_Photos"
+#else
+#    fragment=$1
+#fi
+
 events=100
+fragment="PHSP_Photos"
+START=0
+
+for ARGUMENT in "$@"
+do
+
+    KEY=$(echo $ARGUMENT | cut -f1 -d=)
+    VALUE=$(echo $ARGUMENT | cut -f2 -d=)   
+
+    case "$KEY" in
+            fragment)           fragment=${VALUE} ;;
+            events)             events=${VALUE} ;;     
+            *)   
+    esac    
+
+
+done
+
+
 
 
 
