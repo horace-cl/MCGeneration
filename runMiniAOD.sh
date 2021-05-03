@@ -25,7 +25,10 @@ MINI_REL="CMSSW_10_2_14"
 NANO_REL="CMSSW_10_2_22"
 
 
-
+echo "\n\n================ STARTING ====================="
+pwd
+ls
+echo "n================ STARTING =====================\n\n"
 
 
 
@@ -52,8 +55,8 @@ then
     cd ../..
     
 	echo "==================== PB: CMSRUN starting Gen step ===================="
-	#cmsRun -j ${fragment}_step0.log  -p PSet.py
-    cmsRun -j ${fragment}_step0.log -p GS_${fragment}_step0.py
+	  cmsRun -j ${fragment}_step0.log  -p PSet.py
+    #cmsRun -j ${fragment}_step0.log -p GS_${fragment}_step0.py
     cmsRun mc_analyzer_cfg.py out=GS_${fragment} input=GS_${fragment}_step0 
 fi
 
@@ -124,7 +127,8 @@ fi
 if [ $START -le 3 ];
 then
 	echo "================= PB: CMSRUN starting step 3 ===================="
-	cmsRun -e -j ${fragment}_step3.log  MINIAOD_${fragment}_step3.py
+	cmsRun -e -j FrameworkJobReport.xml -p MINIAOD_${fragment}_step3.py
+	#cmsRun -e -j ${fragment}_step3.log  MINIAOD_${fragment}_step3.py
 	#cleaning
 	#rm -rfv step2-DR-${CHANNEL_DECAY}.root
 fi
