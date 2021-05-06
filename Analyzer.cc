@@ -99,7 +99,7 @@ class MCanalyzer : public edm::EDAnalyzer{
       // ----------member data ---------------------------
       edm::EDGetTokenT<TrackCollection> tracksToken_;  //used to select what tracks to read from configuration file
       edm::EDGetTokenT<edm::HepMCProduct> hepmcproduct_;
-      edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticles_;
+      edm::EDGetTokenT<reco::GenParticleCollection> genCands_;
       
       // 4 moment vector ?instantiation? of all "interesting" particles
       TLorentzVector B_p4, K_p4,Muon1_p4,Muon2_p4, Others_p4;
@@ -128,7 +128,8 @@ class MCanalyzer : public edm::EDAnalyzer{
 // constructors and destructor
 //
 MCanalyzer::MCanalyzer(const edm::ParameterSet& iConfig)
- : number_daughters(0),
+ : genCands_(consumes<reco::GenParticleCollection>(iConfig.getParameter < edm::InputTag > ("GenParticles"))),
+   number_daughters(0),
    bplus(0),
    costhetaL(-2.0),
    costhetaKL(-2.0),
@@ -137,7 +138,6 @@ MCanalyzer::MCanalyzer(const edm::ParameterSet& iConfig)
    debug(iConfig.getParameter<bool>("debug"))
 {
   std::cout << "INITIALIZER?" << std::endl;
-  genParticles_ = consumes<std::vector<reco::GenParticle>>(edm::InputTag("genParticles"));
   hepmcproduct_ = consumes<edm::HepMCProduct>(edm::InputTag("generatorSmeared"));
 }
 
@@ -180,9 +180,9 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  
 
   edm::Handle<reco::GenParticleCollection> genParticles;
-  iEvent.getByLabel("genParticles", genParticles);
+  iEvent.getByToken(genCands_, genParticles);
 
-    
+  std::cout << "GenParticles Size = " << genParticles->size() << std::endl;  
   // First we have to check if the genParticles collection is valid
   if ( genParticles.isValid() ) {
       

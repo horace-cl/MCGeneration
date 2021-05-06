@@ -70,12 +70,16 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = options.report
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxE) )
 
-
+print(options.input)
+if len(options.input.split('/'))>1:
+	fileNames_ = glob(options.input)
+	fileNames_ = ['file:'+f for f in fileNames_]
+else:
+	fileNames_ =  ['file:'+options.input+'.root']
+print(fileNames_)
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(
-		    ['file:'+options.input+'.root']  
-				  ),
-    skipEvents=cms.untracked.uint32(options.skip),
+    fileNames  = cms.untracked.vstring(fileNames_),
+    skipEvents = cms.untracked.uint32(options.skip),
 		)
 
 
@@ -89,16 +93,19 @@ process.TFileService = cms.Service("TFileService",
 
 
 if options.miniAOD:
-    print(options.miniAOD, '--')
-    process.Analyzer = cms.EDAnalyzer('MCanalyzerMiniAOD',
-                                 debug = cms.bool(True)
+    #print(options.miniAOD, '--')
+    #process.Analyzer = cms.EDAnalyzer('MCanalyzerMiniAOD',
+    process.Analyzer = cms.EDAnalyzer('MCanalyzer',
+                                 debug = cms.bool(True),
+													GenParticles = cms.InputTag("prunedGenParticles")
                                  )
     process.p = cms.Path(process.Analyzer)
 
 
 else:
     process.Analyzer = cms.EDAnalyzer('MCanalyzer',
-                                 debug = cms.bool(True)
+                                         debug = cms.bool(True),
+                                  GenParticles = cms.InputTag("genParticles")
                                  )
     process.p = cms.Path(process.Analyzer)
 
