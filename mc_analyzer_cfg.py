@@ -1,5 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 import os
+from pathlib2 import Path
 from FWCore.ParameterSet.VarParsing import VarParsing
 
 
@@ -111,7 +112,12 @@ process.source = cms.Source("PoolSource",
 
 
 if options.out=='automatic' and not options.input.endswith('.root'):
-	out_ = os.path.join(options.input, 'GenTuple_'+str(options.eosINI))
+	out_ = os.path.join(options.input, 'GenTuple_'+str(options.eosINI)+'_'+str(options.eosEND)) 
+elif not options.out.endswith('root'):
+	inpt = options.input[:-1] if options.input.endswith('/') else options.input
+	new_dir = os.path.join(options.out, inpt.split('/')[-1])
+	Path(new_dir).mkdir(exist_ok=True, parents=True)
+	out_ = os.path.join(new_dir, 'GenTuple_'+str(options.eosINI)+'_'+str(options.eosEND))
 else:
 	out_ = options.out.replace('.root', '')
 
