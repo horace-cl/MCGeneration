@@ -1,0 +1,16 @@
+There are two different tasks that this codes try to solve.
+
+The first one is to produce the necessary steps to produce MC and later be able to produced distributelly with CRAB.
+The second one is to create n-tuples with information at GEN level from MiniAOD format, the selection is adjusted for the B+->K+mu-mu+.
+
+Therefore, we have two bash scripts that helps each task.
+
+To produce GEN tuples, first run the compileAnalyzer.sh.
+Then you can run somethin like:
+
+cmsRun mc_analyzer_cfg.py out=Prueba.root miniAOD=1 input=/eos/user/h/hcrottel/PrivateMC/BSLLBALL_Photos_2021-06-03_23_03/ eosINI=0 eosEND=1 debug=1
+
+The input is the directory where all MiniAOD of interest are stored. esoINI and eosEND are counters to select which files from the input directory will be used. Files are sorted as given by os.walk(input).
+
+Note that, in my private production, step3 indicates the MiniAOD format, therefore be aware that you may need to change it
+
