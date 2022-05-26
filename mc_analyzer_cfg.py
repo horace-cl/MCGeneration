@@ -1,4 +1,5 @@
 import FWCore.ParameterSet.Config as cms
+import os
 from FWCore.ParameterSet.VarParsing import VarParsing
 
 
@@ -30,7 +31,7 @@ options.register('out',
                  'GEN_tuple',
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.string,
-                 "Name of the output file")
+                 "Name of the output file or directory")
 
 options.register('input', 
                  'GS_PHSP_Photos_step0',
@@ -50,6 +51,17 @@ options.register('miniAOD',
                  VarParsing.varType.int,
                  "miniAOD")
                  
+options.register('eosINI', 
+                 0,  
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.int,
+                 "miniAOD")
+
+options.register('eosEND', 
+                 -1,  
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.int,
+                 "miniAOD")
                         
 options.parseArguments()
 
@@ -70,42 +82,59 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = options.report
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxE) )
 
-print(options.input)
-if len(options.input.split('/'))>1:
-	fileNames_ = glob(options.input)
-	fileNames_ = ['file:'+f for f in fileNames_]
+
+
+if options.input.endswith('.root'):
+	Files = ['file:'+options.input]
 else:
-	fileNames_ =  ['file:'+options.input+'.root']
-print(fileNames_)
+	Files = []
+	for root,dirs,files in os.walk(options.input):
+		good_files = [f for f in files if 'step3' in f and f.endswith('root')]
+		if any(good_files):
+			#good_files = ['file:'+os.path.join(root,f) for f in good_files]
+			Files += ['file:'+os.path.join(root,f) for f in good_files]
+
+if options.eosEND==-1:
+	Files=Files[options.eosINI:]
+else: 
+	Files=Files[options.eosINI:options.eosEND]
+
 process.source = cms.Source("PoolSource",
-    fileNames  = cms.untracked.vstring(fileNames_),
-    skipEvents = cms.untracked.uint32(options.skip),
+    fileNames = cms.untracked.vstring(
+		   Files
+			 #['file:'+options.input+'.root']  
+				  ),
+    skipEvents=cms.untracked.uint32(options.skip),
 		)
 
 
 
 
+if options.out=='automatic' and not options.input.endswith('.root'):
+	out_ = os.path.join(options.input, 'GenTuple_'+str(options.eosINI))
+else:
+	out_ = options.out.replace('.root', '')
+
 process.TFileService = cms.Service("TFileService",
-         fileName = cms.string(options.out+'.root'),                                  
+         fileName = cms.string(out_+'.root'),                                  
 )
 
 
 
 
 if options.miniAOD:
-    #print(options.miniAOD, '--')
-    #process.Analyzer = cms.EDAnalyzer('MCanalyzerMiniAOD',
+    print(options.miniAOD, '--')
     process.Analyzer = cms.EDAnalyzer('MCanalyzer',
-                                 debug = cms.bool(True),
-													GenParticles = cms.InputTag("prunedGenParticles")
+                                 debug = cms.bool(bool(options.debug)),
+																 GenParticles = cms.InputTag("prunedGenParticles")
                                  )
     process.p = cms.Path(process.Analyzer)
 
 
 else:
     process.Analyzer = cms.EDAnalyzer('MCanalyzer',
-                                         debug = cms.bool(True),
-                                  GenParticles = cms.InputTag("genParticles")
+                                 debug = cms.bool(bool(options.debug)),
+																 GenParticles = cms.InputTag("genParticles")
                                  )
     process.p = cms.Path(process.Analyzer)
 

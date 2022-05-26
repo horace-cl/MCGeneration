@@ -112,6 +112,7 @@ class MCanalyzer : public edm::EDAnalyzer{
       // Some other numbers.... do they need to be here?
       int number_daughters, bplus;
       float costhetaL, costhetaKL, costhetaLJ, costhetaKLJ;
+			int run, 	luminosityBlock, 	event;
       bool debug=false;
 };
 
@@ -129,15 +130,20 @@ class MCanalyzer : public edm::EDAnalyzer{
 //
 MCanalyzer::MCanalyzer(const edm::ParameterSet& iConfig)
  : genCands_(consumes<reco::GenParticleCollection>(iConfig.getParameter < edm::InputTag > ("GenParticles"))),
-   number_daughters(0),
+ 	 number_daughters(0),
    bplus(0),
    costhetaL(-2.0),
    costhetaKL(-2.0),
    costhetaLJ(-2.0),
    costhetaKLJ(-2.0),
+	 run(0),
+	 luminosityBlock(0),
+	 event(0),
    debug(iConfig.getParameter<bool>("debug"))
 {
   std::cout << "INITIALIZER?" << std::endl;
+  //genParticles_ = consumes<std::vector<reco::GenParticle>>(edm::InputTag("genParticles"));
+	//genParticles_ = consumes<std::vector<pat::PackedGenParticle>>(edm::InputTag("genParticles"));
   hepmcproduct_ = consumes<edm::HepMCProduct>(edm::InputTag("generatorSmeared"));
 }
 
@@ -160,8 +166,16 @@ MCanalyzer::~MCanalyzer()
 void
 MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-
+	
+	run = iEvent.id().run();
+	luminosityBlock = iEvent.id().luminosityBlock();
+	event = iEvent.id().event();
   //bool debug = false;
+	if (debug) std::cout << "RUN    : " << run << std::endl;
+	if (debug) std::cout << "EVENT  : " << event << std::endl;
+	if (debug) std::cout << "LUMI   : " << luminosityBlock<< std::endl;
+
+	//if (debug) std::cout << "LUMI : " << iEvent.getLuminosityBlock().id() << std::endl;
 
 
   // Here we are initializing to zero the 4 moments of each particle
@@ -180,9 +194,17 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  
 
   edm::Handle<reco::GenParticleCollection> genParticles;
-  iEvent.getByToken(genCands_, genParticles);
+	iEvent.getByToken(genCands_, genParticles);
+	/*if (miniAOD){
+		iEvent.getByLabel("prunedGenParticles", genParticles);
+	}
+	else{
+		iEvent.getByLabel("genParticles", genParticles);
+	}
+	*/
 
-  std::cout << "GenParticles Size = " << genParticles->size() << std::endl;  
+
+    
   // First we have to check if the genParticles collection is valid
   if ( genParticles.isValid() ) {
       
@@ -210,7 +232,8 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // Basic interesting info of the particle
       int id = p.pdgId();
       int st = p.status();   
-      unsigned int nDaug = p.numberOfDaughters(); 
+      int charge = p.charge();
+			unsigned int nDaug = p.numberOfDaughters(); 
       unsigned int nMom  = p.numberOfMothers(); 
       //const reco::Candidate * mom = p.mother();
       
@@ -219,6 +242,7 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // INFORMATION PRINTS
       if ( (abs(id)==521) ){
           if (debug) std::cout << "Particle ID         : " << id    << std::endl;
+					if (debug) std::cout << "Particle Charge     : " << charge<< std::endl;
           if (debug) std::cout << "Particle Status     : " << st    << std::endl;
           if (debug) std::cout << "Number of Daughters : " << nDaug << std::endl;
           if (debug) std::cout << "Number of Mother    : " << nMom  << std::endl;
@@ -308,7 +332,7 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
               if (debug) std::cout << "- Daughter Status    : " << daughter->status() << std::endl;
               if (debug) std::cout << "- Daughter Daughters : " << daughter->numberOfDaughters() << std::endl;
               if (debug) std::cout << "- Daughter Mothers   : " << daughter->numberOfMothers() << std::endl;  
-              
+              if (debug) std::cout << "- Charge of Daughter : " << daughter->charge() << std::endl;
               // We dont save anything if the B meson does not have the 3 final state particles
               // that we need  (K^+, mu^+, mu^-) 
               if (!correctDecay) {
@@ -339,9 +363,9 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
               // Check if daughter is a muon
               else if( (abs(daughter->pdgId())==13) && (daughter->status() == 1) ){
                 muon_D++;            
-                //We are going to save the muon1 as the muon of the opposite sign as the kaon  
-                //Remember that id is the pdgID of the First Particle, in this case the B meson  
-                if (id*daughter->pdgId()<0){
+                //We are going to save the muon1 as the muon of the opposite sign as the kaon, 
+								//   which should be the same as the bu meson
+                if (charge*daughter->charge()<0){
                   Muon1_p4.SetPtEtaPhiM(daughter->pt(),daughter->eta(),daughter->phi(),daughter->mass());
                 }
                 else {
@@ -447,6 +471,10 @@ MCanalyzer::beginJob()
   tree_->Branch("costhetaKLJ",  &costhetaKLJ);
 
   tree_->Branch("Nbplus", &bplus);
+
+	tree_->Branch("run", &run);
+	tree_->Branch("luminosityBlock", &luminosityBlock);
+	tree_->Branch("event", &event);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
