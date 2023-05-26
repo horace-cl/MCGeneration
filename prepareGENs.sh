@@ -86,6 +86,7 @@ do
 
 	#cmsDriver.py Configuration/GenProduction/python/${fragment}.py --python_filename GS_${fragment}_step0.py --customise Configuration/DataProcessing/Utils.addMonitoring --datatier GEN --fileout file:GS_${fragment}_step0.root --step GEN --no_exec --mc -n $events --nThreads 10
 	cmsDriver.py Configuration/GenProduction/python/${fragment}.py --python_filename ${fragment}_step0.py --eventcontent GENRAW --datatier GEN --fileout file:GEN_${fragment}_step0.root --conditions 102X_upgrade2018_realistic_v11 --step GEN --era Run2_2018 --no_exec --mc -n $events --nThreads 10
+	sed -i "20 a from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper \nrandSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService)\nrandSvc.populate()"  ${fragment}_step0.py
 	#cmsDriver.py Configuration/GenProduction/python/${fragment}.py --python_filename NFGS_${fragment}_step0.py --eventcontent GENRAW --customise Configuration/DataProcessing/Utils.addMonitoring --datatier GEN --fileout file:NFGS_${fragment}_step0.root --conditions 102X_upgrade2018_realistic_v11 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN --geometry DB:Extended --era Run2_2018 --no_exec --mc -n $events --nThreads 10
 
 	#cmsRun GS_${fragment}_step0.py

@@ -115,7 +115,7 @@ cd ../../
 
 
 cmsDriver.py step1 --filein file:GS_${fragment}_step0.root --fileout file:DR_${fragment}_step1.root --pileup_input "dbs:/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM" --mc --eventcontent FEVTDEBUGHLT --pileup "AVE_25_BX_25ns,{'N': 20}" --datatier GEN-SIM-DIGI-RAW --conditions 102X_upgrade2018_realistic_v15 --step DIGI,L1,DIGI2RAW,HLT:@relval2018 --nThreads 1 --geometry DB:Extended --era Run2_2018 --python_filename DR_${fragment}_step1.py  --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring -n -1;
-#sed -i "20 a from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper\nrandSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService)\nrandSvc.populate()" step1-DR-b_kmumu_PHSPS_cfg.py
+sed -i "20 a from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper\nrandSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService)\nrandSvc.populate()" DR_${fragment}_step1.py
 
 
 
@@ -150,8 +150,8 @@ cd ../../
 
 
 cmsDriver.py step2 --filein file:DR_${fragment}_step1.root --fileout file:AOD_${fragment}_step2.root --mc --eventcontent AODSIM --runUnscheduled --datatier AODSIM --conditions 102X_upgrade2018_realistic_v15 --step RAW2DIGI,L1Reco,RECO,RECOSIM,EI --nThreads 1 --geometry DB:Extended --era Run2_2018,bParking --python_filename AOD_${fragment}_step2.py --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring -n -1;
-#sed -i "20 a from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper\nrandSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService)\nrandSvc.populate()" step2-DR-b_kmumu_PHSPS_cfg.py
+sed -i "20 a from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper\nrandSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService)\nrandSvc.populate()"  AOD_${fragment}_step2.py
 
 
 cmsDriver.py  --python_filename MINIAOD_${fragment}_step3.py --eventcontent MINIAODSIM --customise Configuration/DataProcessing/Utils.addMonitoring --datatier MINIAODSIM --fileout file:MINIAOD_${fragment}_step3.root --conditions 102X_upgrade2018_realistic_v15 --step PAT --geometry DB:Extended --filein file:AOD_${fragment}_step2.root --era Run2_2018,bParking --runUnscheduled --no_exec --mc -n -1;
-#sed -i "20 a from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper\nrandSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService)\nrandSvc.populate()" step3-MiniAOD-b_kmumu_PHSPS_cfg.py
+sed -i "20 a from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper\nrandSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService)\nrandSvc.populate()" MINIAOD_${fragment}_step3.py
