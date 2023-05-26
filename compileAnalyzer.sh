@@ -13,6 +13,7 @@ eval `scram runtime -sh`
 mkdir -p Analyzer/MCanalyzer/plugins/
 cp ../../BuildFile.xml Analyzer/MCanalyzer/plugins/BuildFile.xml
 cp ../../Analyzer.cc Analyzer/MCanalyzer/plugins/Analyzer.cc
-cp ../../AnalyzerMiniAOD.cc Analyzer/MCanalyzer/plugins/AnalyzerMiniAOD.cc
+cp ../../Analyzer_Resonant.cc Analyzer/MCanalyzer/plugins/Analyzer_Resonant.cc
+#cp ../../AnalyzerMiniAOD.cc Analyzer/MCanalyzer/plugins/AnalyzerMiniAOD.cc
 
 scram b

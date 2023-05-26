@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    Analyze/MCanalyzer
-// Class:      MCanalyzer
+// Package:    Analyze/MCanalyzerResonant
+// Class:      MCanalyzerResonant
 //
-/**\class MCanalyzer MCanalyzer.cc Analyze/MCanalyzer/plugins/MCanalyzer.cc
+/**\class MCanalyzerResonant MCanalyzerResonant.cc Analyze/MCanalyzerResonant/plugins/MCanalyzerResonant.cc
  Description: [one line class summary]
  Implementation:
      [Notes on implementation]
@@ -79,12 +79,12 @@ using reco::TrackCollection;
 
 
 // Class definition
-class MCanalyzer : public edm::EDAnalyzer{
+class MCanalyzerResonant : public edm::EDAnalyzer{
 
    
     public:
-      explicit MCanalyzer(const edm::ParameterSet&);
-      ~MCanalyzer();
+      explicit MCanalyzerResonant(const edm::ParameterSet&);
+      ~MCanalyzerResonant();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -102,8 +102,8 @@ class MCanalyzer : public edm::EDAnalyzer{
       edm::EDGetTokenT<reco::GenParticleCollection> genCands_;
       
       // 4 moment vector ?instantiation? of all "interesting" particles
-      TLorentzVector B_p4, K_p4,Muon1_p4,Muon2_p4, Others_p4;
-      TLorentzVector B_p4CM,K_p4CM,Muon1_p4CM,Muon2_p4CM, Others_p4CM;
+      TLorentzVector B_p4, K_p4,cc_p4, Muon1_p4,Muon2_p4, Others_p4, OthersRes_p4;
+      TLorentzVector B_p4CM,K_p4CM,cc_p4CM, Muon1_p4CM,Muon2_p4CM, Others_p4CM, OthersRes_p4CM;
       // Vertex of the B meson, obtained by .v[x-z]
       TVector3       gen_b_vtx;
       TTree*         tree_;
@@ -114,7 +114,7 @@ class MCanalyzer : public edm::EDAnalyzer{
       float costhetaL, costhetaKL, costhetaLJ, costhetaKLJ;
 			int run, 	luminosityBlock, 	event;
       int resonance_id;
-      bool debug;
+      bool debug=true;
 };
 
 
@@ -129,7 +129,7 @@ class MCanalyzer : public edm::EDAnalyzer{
 //, 
 // constructors and destructor
 //
-MCanalyzer::MCanalyzer(const edm::ParameterSet& iConfig)
+MCanalyzerResonant::MCanalyzerResonant(const edm::ParameterSet& iConfig)
  : genCands_(consumes<reco::GenParticleCollection>(iConfig.getParameter < edm::InputTag > ("GenParticles"))),
  	 number_daughters(0),
    bplus(0),
@@ -150,7 +150,7 @@ MCanalyzer::MCanalyzer(const edm::ParameterSet& iConfig)
 }
 
 
-MCanalyzer::~MCanalyzer()
+MCanalyzerResonant::~MCanalyzerResonant()
 {
 
    // do anything here that needs to be done at desctruction time
@@ -166,13 +166,12 @@ MCanalyzer::~MCanalyzer()
 
 // ------------ method called for each event  ------------
 void
-MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+MCanalyzerResonant::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
 	
 	run = iEvent.id().run();
 	luminosityBlock = iEvent.id().luminosityBlock();
 	event = iEvent.id().event();
-  std::cout << "debug: " <<debug<< std::endl;
   //bool debug = false;
 	if (debug) std::cout << "RUN    : " << run << std::endl;
 	if (debug) std::cout << "EVENT  : " << event << std::endl;
@@ -184,15 +183,22 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Here we are initializing to zero the 4 moments of each particle
   B_p4.SetPxPyPzE(0.,0.,0.,0.);
   K_p4.SetPxPyPzE(0.,0.,0.,0.);
+  cc_p4.SetPxPyPzE(0.,0.,0.,0.);
+
   Muon1_p4.SetPxPyPzE(0.,0.,0.,0.);
   Muon2_p4.SetPxPyPzE(0.,0.,0.,0.);
   Others_p4.SetPxPyPzE(0.,0.,0.,0.);
+  OthersRes_p4.SetPxPyPzE(0.,0.,0.,0.);
 
   B_p4CM.SetPxPyPzE(0.,0.,0.,0.);
   K_p4CM.SetPxPyPzE(0.,0.,0.,0.);
+  cc_p4CM.SetPxPyPzE(0.,0.,0.,0.);
+  
   Muon1_p4CM.SetPxPyPzE(0.,0.,0.,0.);
   Muon2_p4CM.SetPxPyPzE(0.,0.,0.,0.);
   Others_p4CM.SetPxPyPzE(0.,0.,0.,0.);
+  OthersRes_p4CM.SetPxPyPzE(0.,0.,0.,0.);
+
   costhetaKLJ = -2;
  
 
@@ -228,7 +234,7 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //Which one is correct?
       //First we must extract the i-eth particle
       // It does not make sense to get the Daughter 
-      // --- of the particle if we havent identified it
+      // --- of the particle if we have not identified it
       const reco::GenParticle & p = (*genParticles)[i];  
       //const reco::Candidate *dau = &(*genParticles)[i]; DELETEME
       
@@ -286,15 +292,32 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if ( (abs(id) == 521) && (st == 2) ) {
           
             // We have to verify that the B meson has the correct decay
-            // That is, it has a kaon and 2 muons
-            bool correctDecay=false, kaon_=false, muonp_=false, muonm_=false;
+            // That is, it has a kaon and jpsi or psi2s
+            bool correctDecay=false, kaon_=false, resonance_=false, muonm_=false,  muonp_=false;
             for (size_t k=0; k<nDaug; k++) {
               const reco::Candidate *daughter_ = p.daughter(k);
+
+              if (debug) std::cout << "     Daughter: Particle ID     : " << daughter_->pdgId()    << std::endl;
+              if (debug) std::cout << "     Daughter: Particle Status : " << daughter_->status()    << std::endl;
+              if (debug) std::cout << "\n";
+
               if (abs(daughter_->pdgId())==321) kaon_ = true;
-              if (daughter_->pdgId()==13)      muonp_ = true;
               if (daughter_->pdgId()==-13)     muonm_ = true;
+              if (daughter_->pdgId()==+13)     muonp_ = true;
+              if (resonance_id==-1) resonance_ = true;
+
+              if (abs(daughter_->pdgId())==resonance_id && resonance_id>-1) {
+                resonance_ = true;
+                unsigned int nGrandDaug =  daughter_->numberOfDaughters(); 
+                for (size_t j=0; j<nGrandDaug; j++){
+                  const reco::Candidate *grandaughter_ = daughter_->daughter(j);
+                  if (grandaughter_->pdgId()==-13)    muonm_ = true;
+                  if (grandaughter_->pdgId()==13)     muonp_ = true;
+                }
+              }
+             
             }
-            correctDecay = kaon_ & muonp_ & muonm_;
+            correctDecay = kaon_ & resonance_ & muonm_ & muonp_;
             //if (debug) std::cout << "+Correct Decay : " << correctDecay << "\n" <<std::endl;
 
           
@@ -306,6 +329,14 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
             else{
                 mothers.clear();
+                if (debug) std::cout << "-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n";
+                if (debug) std::cout << " - kaon       " << kaon_      << std::endl;
+                if (debug) std::cout << " - resonance  " << resonance_ << std::endl;
+                if (debug) std::cout << " - muon+      " << muonp_     << std::endl;
+                if (debug) std::cout << " - muon-      " << muonm_     << std::endl;
+                if (debug) std::cout << "-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n\n\n";
+                
+                continue;
             }
           
           
@@ -339,7 +370,7 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
               // We dont save anything if the B meson does not have the 3 final state particles
               // that we need  (K^+, mu^+, mu^-) 
               if (!correctDecay) {
-                  if (debug) std::cout << "------\n";
+                  if (debug) std::cout << "-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n";
                   continue;
               }
               else{
@@ -363,7 +394,34 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 kaon_D++;
                 K_p4.SetPtEtaPhiM(daughter->pt(),daughter->eta(),daughter->phi(),daughter->mass());
               }
-              // Check if daughter is a muon
+
+              // Check if daughter is a ccbar resonance
+              else if ( (abs(daughter->pdgId())==resonance_id) && (daughter->status() == 2) ){
+                unsigned int nGrandDaug =  daughter->numberOfDaughters(); 
+                cc_p4.SetPtEtaPhiM(daughter->pt(),daughter->eta(),daughter->phi(),daughter->mass());
+                //Iterate over the daughtes of the JPsi
+                for (size_t j=0; j<nGrandDaug; j++){
+                  //j-eth Grandaughter of the B meson
+                  const reco::Candidate *grandaughter = daughter->daughter(j);
+                  if (abs(grandaughter->pdgId())==13){
+                    muon_D++;      
+                    // Select as muon1 the one with opposite sign as the B meson (K meson) to extract the angular observable
+                    if (charge*grandaughter->charge()<0){
+                      Muon1_p4.SetPtEtaPhiM(grandaughter->pt(),grandaughter->eta(),grandaughter->phi(),grandaughter->mass());
+                    }
+                    else {
+                      Muon2_p4.SetPtEtaPhiM(grandaughter->pt(),grandaughter->eta(),grandaughter->phi(),grandaughter->mass());
+                    }
+                  }    
+                  else {
+                    if (debug) std::cout << "Other particle in the decay of the JPsi! " << grandaughter->pdgId() << std::endl;
+                    TLorentzVector gammaD;
+                    gammaD.SetPtEtaPhiM(grandaughter->pt(),grandaughter->eta(),grandaughter->phi(),grandaughter->mass());
+                    OthersRes_p4 = OthersRes_p4+gammaD;
+                  }
+                }
+              }
+
               else if( (abs(daughter->pdgId())==13) && (daughter->status() == 1) ){
                 muon_D++;            
                 //We are going to save the muon1 as the muon of the opposite sign as the kaon, 
@@ -396,24 +454,30 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
               math::XYZTLorentzVector muon1J(Muon1_p4.Px(), Muon1_p4.Py(), Muon1_p4.Pz(), Muon1_p4.E());
               math::XYZTLorentzVector muon2J(Muon2_p4.Px(), Muon2_p4.Py(), Muon2_p4.Pz(), Muon2_p4.E());
               math::XYZTLorentzVector kaonJ(K_p4.Px(), K_p4.Py(), K_p4.Pz(), K_p4.E());
+              math::XYZTLorentzVector ccJ(cc_p4.Px(), cc_p4.Py(), cc_p4.Pz(), cc_p4.E());
               math::XYZTLorentzVector bmesonJ(B_p4.Px(), B_p4.Py(), B_p4.Pz(), B_p4.E());
               math::XYZTLorentzVector others(Others_p4.Px(), Others_p4.Py(), Others_p4.Pz(), Others_p4.E());
+              math::XYZTLorentzVector othersRes(OthersRes_p4.Px(), OthersRes_p4.Py(), OthersRes_p4.Pz(), OthersRes_p4.E());
 
               // Create the di-muon 4 momentum
               math::XYZTLorentzVector dilepJ = muon1J+muon2J;
               ROOT::Math::Boost dileptonCMBoost(dilepJ.BoostToCM());
 
               math::XYZTLorentzVector kaonCMJ(  dileptonCMBoost( kaonJ )  );
+              math::XYZTLorentzVector ccCMJ(  dileptonCMBoost( ccJ )  );
               math::XYZTLorentzVector muonCM1J(  dileptonCMBoost( muon1J )  );
               math::XYZTLorentzVector muonCM2J(  dileptonCMBoost( muon2J )  );
               math::XYZTLorentzVector bmesonCMJ(  dileptonCMBoost( bmesonJ )  );
               math::XYZTLorentzVector othersCM(  dileptonCMBoost( others )  ); 
+              math::XYZTLorentzVector othersResCM(  dileptonCMBoost( othersRes )  ); 
 
               B_p4CM.SetPxPyPzE(bmesonCMJ.x(), bmesonCMJ.y(), bmesonCMJ.z(), bmesonCMJ.t() ) ;
               K_p4CM.SetPxPyPzE(kaonCMJ.x(), kaonCMJ.y(), kaonCMJ.z(), kaonCMJ.t() ) ;
+              cc_p4CM.SetPxPyPzE(ccCMJ.x(), ccCMJ.y(), ccCMJ.z(), ccCMJ.t() ) ;
               Muon1_p4CM.SetPxPyPzE(muonCM1J.x(), muonCM1J.y(), muonCM1J.z(), muonCM1J.t() ) ;
               Muon2_p4CM.SetPxPyPzE(muonCM2J.x(), muonCM2J.y(), muonCM2J.z(), muonCM2J.t() ) ;
               Others_p4CM.SetPxPyPzE(othersCM.x(), othersCM.y(), othersCM.z(), othersCM.t() ) ;
+              OthersRes_p4CM.SetPxPyPzE(othersResCM.x(), othersResCM.y(), othersResCM.z(), othersResCM.t() ) ;
 
 
               costhetaLJ = ( muonCM1J.x()*muonCM2J.x() 
@@ -444,7 +508,7 @@ MCanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void
-MCanalyzer::beginJob()
+MCanalyzerResonant::beginJob()
 {
   std::cout << "Beginning analyzer job" << std::endl;
 
@@ -454,16 +518,20 @@ MCanalyzer::beginJob()
   //Lab frame momenta  
   tree_->Branch("B_p4",      "TLorentzVector",  &B_p4);
   tree_->Branch("K_p4",      "TLorentzVector",  &K_p4);
+  tree_->Branch("cc_p4",      "TLorentzVector",  &cc_p4);
   tree_->Branch("Muon1_p4",  "TLorentzVector",  &Muon1_p4);
   tree_->Branch("Muon2_p4",  "TLorentzVector",  &Muon2_p4);
   tree_->Branch("Others_p4", "TLorentzVector",  &Others_p4);
+  tree_->Branch("OthersRes_p4", "TLorentzVector",  &OthersRes_p4);
  
   //CM dimuon momenta  
   tree_->Branch("B_p4CM",      "TLorentzVector",  &B_p4CM);
   tree_->Branch("K_p4CM",      "TLorentzVector",  &K_p4CM);
+  tree_->Branch("cc_p4CM",      "TLorentzVector",  &cc_p4CM);
   tree_->Branch("Muon1_p4CM",  "TLorentzVector",  &Muon1_p4CM);
   tree_->Branch("Muon2_p4CM",  "TLorentzVector",  &Muon2_p4CM);
   tree_->Branch("Others_p4CM", "TLorentzVector",  &Others_p4CM);
+  tree_->Branch("OthersRes_p4CM", "TLorentzVector",  &OthersRes_p4CM);
   
     
   tree_->Branch("daughter_ids",   "vector", &daughter_ids);
@@ -482,7 +550,7 @@ MCanalyzer::beginJob()
 
 // ------------ method called once each job just after ending the event loop  ------------
 void
-MCanalyzer::endJob()
+MCanalyzerResonant::endJob()
 {
   tree_->GetDirectory()->cd();
   tree_->Write();
@@ -490,7 +558,7 @@ MCanalyzer::endJob()
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-MCanalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+MCanalyzerResonant::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -505,4 +573,4 @@ MCanalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(MCanalyzer);
+DEFINE_FWK_MODULE(MCanalyzerResonant);

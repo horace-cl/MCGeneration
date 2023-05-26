@@ -6,8 +6,8 @@
 # This is done to be compatible with runMiniAOD.sh which
 # which requires this keyargs by CRAB
 
-events=100
-fragment="PHSP_Photos"
+events=2000
+fragment="JPsiK_mumuPHSP"
 START=0
 
 for ARGUMENT in "$@"

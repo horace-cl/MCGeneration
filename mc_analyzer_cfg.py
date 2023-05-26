@@ -63,6 +63,14 @@ options.register('eosEND',
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.int,
                  "miniAOD")
+
+options.register('resonanceID',
+                0,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.int,
+                 "resonanceID"
+)
+#443
                         
 options.parseArguments()
 
@@ -127,20 +135,23 @@ process.TFileService = cms.Service("TFileService",
 
 
 
+Analyzer_Name = 'MCAnalyzer' if options.resonanceID==0 else 'MCanalyzerResonant'
 
 if options.miniAOD:
     print(options.miniAOD, '--')
-    process.Analyzer = cms.EDAnalyzer('MCanalyzer',
+    process.Analyzer = cms.EDAnalyzer(Analyzer_Name,
                                  debug = cms.bool(bool(options.debug)),
-																 GenParticles = cms.InputTag("prunedGenParticles")
+                                 resonance_id = cms.int32(options.resonanceID),
+								 GenParticles = cms.InputTag("prunedGenParticles")
                                  )
     process.p = cms.Path(process.Analyzer)
 
 
 else:
-    process.Analyzer = cms.EDAnalyzer('MCanalyzer',
+    process.Analyzer = cms.EDAnalyzer(Analyzer_Name,
                                  debug = cms.bool(bool(options.debug)),
-																 GenParticles = cms.InputTag("genParticles")
+                                 resonance_id = cms.int32(options.resonanceID),
+								 GenParticles = cms.InputTag("genParticles")
                                  )
     process.p = cms.Path(process.Analyzer)
 
