@@ -95,6 +95,9 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxE
 
 if options.input.endswith('.root'):
 	Files = ['file:'+options.input]
+elif options.input.endswith('.txt'):
+    with open(options.input, 'r') as txt:
+        Files = txt.readlines()
 else:
 	Files = []
 	for root,dirs,files in os.walk(options.input):
@@ -135,7 +138,7 @@ process.TFileService = cms.Service("TFileService",
 
 
 
-Analyzer_Name = 'MCAnalyzer' if options.resonanceID==0 else 'MCanalyzerResonant'
+Analyzer_Name = 'MCanalyzer' if options.resonanceID==0 else 'MCanalyzerResonant'
 
 if options.miniAOD:
     print(options.miniAOD, '--')
