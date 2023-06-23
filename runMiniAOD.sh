@@ -21,7 +21,7 @@
 #		START=$3
 #fi
 
-fragment="JPsiK_mumuPHSP"
+fragment="PHSP_Photos_muFilter"
 START=0
 
 for ARGUMENT in "$@"
@@ -91,12 +91,16 @@ then
     cd ../..
     
 	echo "==================== PB: CMSRUN starting Gen step ===================="
-	#cmsRun -j ${fragment}_step0.log  -p PSet.py
-    cmsRun -j ${fragment}_step0.log -p GS_${fragment}_step0.py
-    #cmsRun mc_analyzer_cfg.py out=GS_${fragment} input=GS_${fragment}_step0 
+	cmsRun -j ${fragment}_step0.log  -p PSet.py
+    #cmsRun -j ${fragment}_step0.log -p GS_${fragment}_step0.py
+    cmsRun mc_analyzer_cfg.py out=GS_${fragment}.root input=GS_${fragment}_step0.root 
+	echo "========== ============================== ========== "
+	echo "==================== FILE SIZE! ==================== "
+	echo "========== ============================== ========== "
+	du -h GS_${fragment}_step0.root
+	echo "========== ============================== ========== "
+	echo "========== ============================== ========== "
 fi
-
-
 
 
 
@@ -124,8 +128,12 @@ then
 
 	echo "==================== PB: CMSRUN starting Reco step ===================="
 	cmsRun -e -j ${fragment}_step1.log DR_${fragment}_step1.py 
-	#cleaning
-	#rm -rfv step0-GS-${CHANNEL_DECAY}.root
+	echo "========== ============================== ========== "
+	echo "==================== FILE SIZE! ==================== "
+	echo "========== ============================== ========== "
+	du -h DR_${fragment}_step1.root
+	echo "========== ============================== ========== "
+	echo "========== ============================== ========== "
 fi
 
 
@@ -158,14 +166,28 @@ then
 
 	echo "================= PB: CMSRUN starting Reco step 2 ===================="
 	cmsRun -e -j ${fragment}_step2.log AOD_${fragment}_step2.py
+
+	echo "========== ============================== ========== "
+	echo "==================== FILE SIZE! ==================== "
+	echo "========== ============================== ========== "
+	du -h AOD_${fragment}_step2.root
+	echo "========== ============================== ========== "
+	echo "========== ============================== ========== "
+
 fi
+
+
+
 
 if [ $START -le 3 ];
 then
 	echo "================= PB: CMSRUN starting step 3 ===================="
-	#cmsRun -e -j FrameworkJobReport.xml -p MINIAOD_${fragment}_step3.py
-	cmsRun -e -j ${fragment}_step3.log  MINIAOD_${fragment}_step3.py
-	#cleaning
-	#rm -rfv step2-DR-${CHANNEL_DECAY}.root
+	cmsRun -e -j FrameworkJobReport.xml -p MINIAOD_${fragment}_step3.py
+	#cmsRun -e -j ${fragment}_step3.log  MINIAOD_${fragment}_step3.py
+	echo "========== ============================== ========== "
+	echo "==================== FILE SIZE! ==================== "
+	echo "========== ============================== ========== "
+	du -h MINIAOD_${fragment}_step3.root
+	echo "========== ============================== ========== "
+	echo "========== ============================== ========== "
 fi
-
