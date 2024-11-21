@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name of the fragment to be used.
-fragment="BdToK0sMuMu_Unbiased_PHSP"
+fragment="BdToK0sMuMu_MuK0sFilter_PHSP"
 
 GEN_REL="CMSSW_13_0_13"
 RECO_REL="CMSSW_13_0_14"
@@ -56,7 +56,6 @@ echo "==================== PB: CMSRUN starting Gen step ===================="
 cmsRun -j ${fragment}_step0.log  -p PSet.py
 #cmsRun -j ${fragment}_step0.log -p GS_${fragment}_step0.py
 
-#cmsRun mc_analyzer_cfg.py out=GS_${fragment}.root input=GS_${fragment}_step0.root 
 echo "========== ============================== ========== "
 echo "==================== FILE SIZE! ==================== "
 echo "========== ============================== ========== "

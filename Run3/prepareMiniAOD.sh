@@ -6,8 +6,8 @@
 # This is done to be compatible with runMiniAOD.sh which
 # which requires this keyargs by CRAB
 
-events=50
-fragment="BdToK0sMuMu_Unbiased_PHSP"
+events=100
+fragment="BdToK0sMuMu_MuK0sFilter_PHSP"
 
 
 
