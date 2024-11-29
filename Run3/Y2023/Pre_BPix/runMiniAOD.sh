@@ -3,7 +3,7 @@
 # Name of the fragment to be used.
 fragment="BdToK0sMuMu_MuK0sFilter_PHSP"
 
-GEN_REL="CMSSW_13_0_13"
+GEN_REL="CMSSW_13_0_17"
 RECO_REL="CMSSW_13_0_14"
 MINI_REL="CMSSW_13_0_14"
 

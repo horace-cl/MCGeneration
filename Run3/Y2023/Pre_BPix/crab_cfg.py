@@ -14,7 +14,7 @@ date_up_to_minute = '_'.join(date_str.split(':')[0:2])
 
 fragment = 'BdToK0sMuMu_MuK0sFilter_PHSP'
 nEvents  = 10000
-NJOBS    = 1000
+NJOBS    = 3500
 
 step0    = "GS_"+fragment+"_step0.py" 
 step1    = "DR_"+fragment+"_step1.py"
@@ -26,7 +26,7 @@ GEN_file  = "GS_"+fragment+"_step0.root"
 MINI_file = "MINIAOD_"+fragment+"_step3.root" 
 
 
-config.General.requestName     = 'Try2'+fragment+date_up_to_minute 
+config.General.requestName     = fragment+date_up_to_minute 
 config.General.transferOutputs = True
 config.General.transferLogs    = True
 config.General.workArea        = fragment
@@ -44,7 +44,7 @@ config.JobType.maxMemoryMB  = 3500
 config.JobType.scriptExe     = 'runMiniAOD.sh'
 config.JobType.scriptArgs   = ['fragment='+fragment]
 #config.JobType.outputFiles   = [MINI_file]
-config.JobType.outputFiles   = [GEN_file, MINI_file]
+config.JobType.outputFiles   = [MINI_file]
 
 
 config.Data.outputPrimaryDataset = fragment+date_up_to_minute
